@@ -34,13 +34,13 @@ contract('SDCoin', (accounts) => {
                 [addr1, addr2, val, nonce])
             let h = web3.utils.sha3(b)
             let sig = await web3.eth.sign(h, acc1)
-            console.log(sig)
+            console.log("Signature: ", sig)
             sig = web3.utils.hexToBytes(sig)
 
             await instance.approveSig(addr1, addr2, val, sig)
 
             let allowance = await instance.allowance(addr1, addr2)
-            console.log(parseInt(allowance))
+            console.log("Allowance: ", parseInt(allowance))
             assert.strictEqual(parseInt(allowance), val, "Allowance and value not equal")
         }
     })

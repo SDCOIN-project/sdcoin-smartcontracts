@@ -24,8 +24,7 @@ contract SDCoin is ERC20, ERC20Detailed, ERC20Mintable, ERC20Burnable, Ownable {
         return _nonces[_who];
     }
 
-    function approveSig(address _from, address _spender, uint256 _value, bytes calldata _sig)
-                        external returns (uint256) {
+    function approveSig(address _from, address _spender, uint256 _value, bytes calldata _sig) external {
         require(_sig.length == 65, "Invalid signature length");
 
         bytes12 offset;
@@ -54,6 +53,5 @@ contract SDCoin is ERC20, ERC20Detailed, ERC20Mintable, ERC20Burnable, Ownable {
 
         _approve(_from, _spender, _value);
         _nonces[_from] = _nonces[_from] + 1;
-        return _nonces[_from];
     }
 }
