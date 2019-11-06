@@ -1,42 +1,42 @@
 pragma solidity ^0.5.11;
 
-import "./LC.sol";
+import "./LUV.sol";
 import "./SDC.sol";
+import "./access/roles/WhitelistAdminRole.sol";
 
-contract Swap is Ownable {
+contract Swap is WhitelistAdminRole {
 
-    address private SDCAddress;
-    address private LCAddress;
+    SDCoin private _sdc;
+    LUV private _luv;
 
-    uint256 public KRW_in_SDC;
+    uint256 public exchangeRate;
     uint16 constant divisor = 1000;
 
-    constructor(address _SDCAddress, uint256 _KRW_in_SDC) public {
-        SDCAddress = _SDCAddress;
-        KRW_in_SDC = _KRW_in_SDC;
+    constructor(uint256 _exchangeRate, address[] memory _admins) public {
+        _sdc = SDCoin(msg.sender);
+        _luv = new LUV(_admins);
+        exchangeRate = _exchangeRate;
 
-        LC lc = new LC();
-        LCAddress = address(lc);
+        for (uint8 i = 0; i < _admins.length; i++) {
+            addWhitelistAdmin(_admins[i]);
+        }
     }
 
     function swap(address receiver) external {
-        SDCoin sdc = SDCoin(SDCAddress);
-        LC lc = LC(LCAddress);
-
-        uint256 sdcAmount = sdc.allowance(msg.sender, address(this));
+        uint256 sdcAmount = _sdc.allowance(msg.sender, address(this));
         require(sdcAmount > 0, "No SDC for conversion");
 
-        uint256 krw = sdcAmount * KRW_in_SDC;
-        uint256 lcAmount = krw / divisor;
+        uint256 krw = sdcAmount * exchangeRate;
+        uint256 luvAmount = krw / divisor;
 
-        require(lcAmount > 0, "Too few sdc to convert");
+        require(luvAmount > 0, "Too few sdc to convert");
 
-        sdc.transferFrom(msg.sender, address(this), sdcAmount);
-        lc.mint(receiver, lcAmount);
-        sdc.burn(sdcAmount);
+        _sdc.transferFrom(msg.sender, address(this), sdcAmount);
+        _luv.mint(receiver, luvAmount);
+        _sdc.burn(address(this), sdcAmount);
     }
 
-    function updateRate(uint256 _KRW_in_SDC) external onlyOwner {
-        KRW_in_SDC = _KRW_in_SDC;
+    function updateRate(uint256 _exchangeRate) external onlyWhitelistAdmin {
+        exchangeRate = _exchangeRate;
     }
 }

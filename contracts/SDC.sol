@@ -5,19 +5,36 @@ import "./token/ERC20Detailed.sol";
 import "./token/ERC20Mintable.sol";
 import "./token/ERC20Burnable.sol";
 import "./ownership/Ownable.sol";
+import "./access/roles/WhitelistAdminRole.sol";
 
-contract SDCoin is ERC20, ERC20Detailed, ERC20Mintable, ERC20Burnable, Ownable {
+import "./Swap.sol";
+
+contract SDCoin is ERC20, ERC20Detailed, WhitelistAdminRole {
     string private NAME = "SDCOIN";
     string private SYMBOL = "SDC";
     uint8 private DECIMALS = 18;
     uint256 private INITIAL_SUPPLY = 3500000000;
 
-    bytes private APPROVE_MSG_PREFIX = "\x19Ethereum Signed Message:\n32";
+    address public SwapAddress;
 
+    address private _owner;
     mapping(address => uint256) private _nonces;
 
-    constructor() public ERC20Detailed(NAME, SYMBOL, DECIMALS) {
-        _mint(owner(), INITIAL_SUPPLY * (10 ** uint(DECIMALS)));
+    bytes private APPROVE_MSG_PREFIX = "\x19Ethereum Signed Message:\n32";
+
+    constructor(uint256 _exchangeRate, address[] memory _admins) public ERC20Detailed(NAME, SYMBOL, DECIMALS) {
+        _owner = msg.sender;
+        addWhitelistAdmin(_owner);
+        _mint(_owner, INITIAL_SUPPLY * (10 ** uint(DECIMALS)));
+
+        Swap swap = new Swap(_exchangeRate, _admins);
+        SwapAddress = address(swap);
+        addWhitelistAdmin(SwapAddress);
+
+
+        for (uint8 i = 0; i < _admins.length; i++) {
+            addWhitelistAdmin(_admins[i]);
+        }
     }
 
     function getNonce(address _who) external view returns (uint256) {
@@ -53,5 +70,13 @@ contract SDCoin is ERC20, ERC20Detailed, ERC20Mintable, ERC20Burnable, Ownable {
 
         _approve(_from, _spender, _value);
         _nonces[_from] = _nonces[_from] + 1;
+    }
+
+    function mint(address account, uint256 amount) external onlyWhitelistAdmin {
+        _mint(account, amount);
+    }
+
+    function burn(address account, uint256 amount) external onlyWhitelistAdmin {
+        _burn(account, amount);
     }
 }
