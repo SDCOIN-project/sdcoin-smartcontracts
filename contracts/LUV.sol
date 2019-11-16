@@ -2,30 +2,21 @@ pragma solidity >=0.4.21 <0.6.0;
 
 import "./token/ERC20.sol";
 import "./token/ERC20Detailed.sol";
-import "./token/ERC20Mintable.sol";
-import "./token/ERC20Burnable.sol";
-import "./ownership/Ownable.sol";
-import "./access/roles/WhitelistAdminRole.sol";
 
-import "./Swap.sol";
+import "./Ownable.sol";
 
-contract LUV is ERC20, ERC20Detailed, WhitelistAdminRole {
+contract LUV is ERC20, ERC20Detailed, Ownable {
     string private NAME = "LUV";
     string private SYMBOL = "LUV";
     uint8 private DECIMALS = 18;
 
-    constructor(address[] memory _admins) public ERC20Detailed(NAME, SYMBOL, DECIMALS) {
-        addWhitelistAdmin(msg.sender);
-        for (uint8 i = 0; i < _admins.length; i++) {
-            addWhitelistAdmin(_admins[i]);
-        }
-    }
+    constructor() public ERC20Detailed(NAME, SYMBOL, DECIMALS) {}
 
-    function mint(address account, uint256 amount) external onlyWhitelistAdmin {
+    function mint(address account, uint256 amount) external onlyOwnerOrAdmin {
         _mint(account, amount);
     }
 
-    function burn(address account, uint256 amount) external onlyWhitelistAdmin {
+    function burn(address account, uint256 amount) external onlyOwnerOrAdmin {
         _burn(account, amount);
     }
 }

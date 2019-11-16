@@ -1,3 +1,5 @@
-build/
+.gitignore
+parse.sh
 node_modules/
+build/
 other/
