@@ -31,8 +31,8 @@ contract('SDC', (accounts) => {
             let val = value * (i+1);
 
             let b = web3.eth.abi.encodeParameters(
-                ['bytes20', 'bytes20', 'uint256', 'uint256'],
-                [addr1, addr2, val, nonce])
+                ['bytes20', 'bytes20', 'uint256'],
+                [addr1, addr2, nonce])
             if (isPrint) console.log("Packed:", b)
             let h = web3.utils.sha3(b)
             let sig = await web3.eth.sign(h, acc1)
@@ -40,10 +40,10 @@ contract('SDC', (accounts) => {
             sig = web3.utils.hexToBytes(sig)
 
             if (isPrint) {
-                let res = await sdc.approveSig.call(addr1, addr2, val, sig)
+                let res = await sdc.approveSig.call(val, addr1, addr2, sig)
                 console.log("Result:", res)
             }
-            await sdc.approveSig(addr1, addr2, val, sig)
+            await sdc.approveSig(val, addr1, addr2, sig)
 
             let allowance = await sdc.allowance(addr1, addr2)
             if (isPrint) console.log("Allowance: ", parseInt(allowance))
@@ -76,18 +76,18 @@ contract('SDC', (accounts) => {
         let nonce = await sdc.getNonce.call(addr1)
         nonce = parseInt(nonce)
         let b = web3.eth.abi.encodeParameters(
-            ['bytes20', 'bytes20', 'uint256', 'uint256'],
-            [addr1, addr2, value, nonce])
+            ['bytes20', 'bytes20', 'uint256'],
+            [addr1, addr2, nonce])
         let h = web3.utils.sha3(b)
 
         let sig = await web3.eth.sign(h, addr1)
         sig = web3.utils.hexToBytes(sig)
 
         if (isPrint) {
-            let res1c = await sdc.approveSig.call(addr1, addr2, value, sig)
+            let res1c = await sdc.approveSig.call(value, addr1, addr2, sig)
             console.log("Result:", res1c)
         }
-        await sdc.approveSig(addr1, addr2, value, sig)
+        await sdc.approveSig(value, addr1, addr2, sig)
 
         let allowance = await sdc.allowance(addr1, addr2)
         assert.strictEqual(parseInt(allowance), value, "Allowance and value not equal")
@@ -98,8 +98,8 @@ contract('SDC', (accounts) => {
         nonce = await sdc.getNonce.call(addr1)
         nonce = parseInt(nonce)
         b = web3.eth.abi.encodeParameters(
-            ['bytes20', 'bytes20', 'uint256', 'uint256'],
-            [addr1, addr2, value, nonce])
+            ['bytes20', 'bytes20', 'uint256'],
+            [addr1, addr2, nonce])
         h = web3.utils.sha3(b)
 
         let sigres = await web3.eth.accounts.sign(h, priv1)
@@ -108,10 +108,10 @@ contract('SDC', (accounts) => {
         sig = web3.utils.hexToBytes(sig)
 
         if (isPrint) {
-            let res2c = await sdc.approveSig.call(addr1, addr2, value, sig)
+            let res2c = await sdc.approveSig.call(value, addr1, addr2, sig)
             console.log("Result:", res2c)
         }
-        await sdc.approveSig(addr1, addr2, value, sig)
+        await sdc.approveSig(value, addr1, addr2, sig)
 
         allowance = await sdc.allowance(addr1, addr2)
         assert.strictEqual(parseInt(allowance), value, "Allowance and value not equal")

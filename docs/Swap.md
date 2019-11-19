@@ -15,7 +15,7 @@
 
 ## Геттеры
 
-|Getter|Description|
-|---|---|
-|sdc|Возвращает адрес SDC контракта|
-|luv|Возвращает адрес LUV контракта|
+|Getter|Type|Description|
+|---|---|---|
+|sdc|address|Возвращает адрес SDC контракта|
+|luv|address|Возвращает адрес LUV контракта|

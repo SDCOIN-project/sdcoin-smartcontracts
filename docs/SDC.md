@@ -73,8 +73,8 @@ nonce = parseInt(nonce)
 
 // упаковка параметров для хеширования
 let b = web3.eth.abi.encodeParameters(
-    ['bytes20', 'bytes20', 'uint256', 'uint256'],
-    [addr1, addr2, value, nonce])
+    ['bytes20', 'bytes20', 'uint256'],
+    [addr1, addr2, nonce])
 
 // хеширование
 let h = web3.utils.sha3(b)
@@ -90,12 +90,12 @@ let sig = await web3.eth.sign(h, addr1)
 sig = web3.utils.hexToBytes(sig)
 ```
 
-Когда сервер получает информацию для approve и сигнатуру, сервер вызывает у SDC контракта метод `approveSig(address _from, address _spender, uint256 _value, bytes calldata _sig)`.
+Когда сервер получает информацию для approve и сигнатуру, сервер вызывает у SDC контракта метод `approveSig(uint256 _value, address _from, address _spender, bytes calldata _sig)`.
 Параметры:
 
++ `uint256 _value` - сумма, которую разрешается тратить
 + `address _from` - адрес отправителя, т.е. аккаунт, который разрешает перевод своих средств
 + `address _spender` - адрес аккаунта, которыму разрешается трата средств
-+ `uint256 _value` - сумма, которую разрешается тратить
 + `bytes _sig` - сигнатура
 
 Если валидация сигнатуры провалилась, то будет выброшена ошибка.

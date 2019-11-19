@@ -62,16 +62,13 @@ contract Escrow {
         return _swap.countSDCFromLUV(_amount * price);
     }
 
-    function payment(uint32 _sellAmount,
-                     address _from, uint256 _valueSDC, bytes calldata _sig)
+    function payment(uint32 _sellAmount, address _from, bytes calldata _sig)
     external enoughAmount(_sellAmount) {
         require(address(this).balance >= paymentGas * tx.gasprice,
                 "Insufficient ether to return gas");
 
-        _sdc.approveSig(_from, address(this), _valueSDC, _sig);
-
         uint256 neededSDC = _swap.countSDCFromLUV(_sellAmount * price);
-        require(_valueSDC >= neededSDC, "Not enough SDC approved");
+        _sdc.approveSig(neededSDC, _from, address(this), _sig);
 
         uint256 balance = _sdc.balanceOf(_from);
         require(balance >= neededSDC, "Insufficient funds for payment");

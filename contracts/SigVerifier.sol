@@ -11,7 +11,7 @@ library SigVerifier {
         return self._nonces[_account];
     }
 
-    function verify(Data storage self, address _from, address _spender, uint256 _value, bytes memory _sig)
+    function verify(Data storage self, address _from, address _spender, bytes memory _sig)
     internal returns(bool) {
         require(_sig.length == 65, "Invalid signature length");
 
@@ -21,7 +21,7 @@ library SigVerifier {
             APPROVE_MSG_PREFIX, keccak256(abi.encodePacked(
                 bytes20(_from), offset,
                 bytes20(_spender), offset,
-                _value, self._nonces[_from]))));
+                self._nonces[_from]))));
 
         bytes memory sig = _sig;
 

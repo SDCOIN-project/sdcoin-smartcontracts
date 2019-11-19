@@ -48,10 +48,9 @@ contract('Escrow', (accounts) => {
         ////////////////////////////////////////////////////////////////
         let nonce = await sdc.getNonce.call(buyerAddr)
         nonce = parseInt(nonce)
-        let value = 1
         let b = web3.eth.abi.encodeParameters(
-            ['bytes20', 'bytes20', 'uint256', 'uint256'],
-            [buyerAddr, escrow.address, value, nonce])
+            ['bytes20', 'bytes20', 'uint256'],
+            [buyerAddr, escrow.address, nonce])
         let h = web3.utils.sha3(b)
 
         let sig = await web3.eth.sign(h, buyerAddr)
@@ -62,18 +61,18 @@ contract('Escrow', (accounts) => {
         let ethBalance = await web3.eth.getBalance(buyerAddr)
 
         // to makes transaction
-        let resPrint = await escrow.payment.call(buyAmount, buyerAddr, value, sig, {from: buyerAddr})
+        let resPrint = await escrow.payment.call(buyAmount, buyerAddr, sig, {from: buyerAddr})
         if (isPrint) console.log(resPrint)
 
         // to get transaction as object
-        let res = await escrow.payment(buyAmount, buyerAddr, value, sig, {from: buyerAddr})
-        // if (isPrint) console.log(res)
-        console.log(res.receipt.gasUsed)
-        console.log(sdc.address)
+        let res = await escrow.payment(buyAmount, buyerAddr, sig, {from: buyerAddr})
+        if (isPrint) console.log(res)
+        // console.log(res.receipt.gasUsed)
+        // console.log(sdc.address)
 
         let newEthBalance = await web3.eth.getBalance(buyerAddr)
 
-        // assert.equal(ethBalance, newEthBalance, "balances should be equal")
+        assert.equal(ethBalance, newEthBalance, "balances should be equal")
 
         // let allowance = await sdc.allowance(addr1, addr2)
         // assert.strictEqual(parseInt(allowance), value, "Allowance and value not equal")

@@ -24,9 +24,9 @@ contract SDC is ERC20, ERC20Detailed, ERC20Pausable, Ownable {
         return SigVerifier.getNonce(_nonces, _account);
     }
 
-    function approveSig(address _from, address _spender, uint256 _value, bytes calldata _sig) external
+    function approveSig(uint256 _value, address _from, address _spender, bytes calldata _sig) external
     whenNotPaused {
-        bool isValid = SigVerifier.verify(_nonces, _from, _spender, _value, _sig);
+        bool isValid = SigVerifier.verify(_nonces, _from, _spender, _sig);
         require(isValid, "Invalid signature");
 
         _approve(_from, _spender, _value);
