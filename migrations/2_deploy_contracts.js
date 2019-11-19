@@ -2,6 +2,8 @@ var SDC = artifacts.require("SDC");
 var LUV = artifacts.require("LUV");
 var Swap = artifacts.require("Swap");
 
+var Escrow = artifacts.require("Escrow");
+
 var TestHelper = artifacts.require("TestHelper");
 
 module.exports = async function(deployer, network, accounts) {
@@ -27,6 +29,7 @@ module.exports = async function(deployer, network, accounts) {
 
     sdc.transfer(TestHelper.address, 0xfffffffff)
   } else if (network == "rinkeby") {
+    // SDC LUV Swap
     let addr0 = accounts[0]
     let exchangeRate = 10000
 
@@ -39,5 +42,8 @@ module.exports = async function(deployer, network, accounts) {
 
     sdc.addAdmin(Swap.address, {from: addr0})
     luv.addAdmin(Swap.address, {from: addr0})
+
+    // Escrow
+    await deployer.deploy(Escrow, addr0, 0, 1, 10000, 1, SDC.address, LUV.address, Swap.address)
   }
 };
