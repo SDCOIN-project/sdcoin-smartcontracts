@@ -3,7 +3,6 @@ pragma solidity ^0.5.11;
 import "./SDC.sol";
 import "./LUV.sol";
 import "./Swap.sol";
-import "./SigVerifier.sol";
 
 contract Escrow {
     uint32 public id;
@@ -15,11 +14,11 @@ contract Escrow {
     event Payment(address indexed _sender, uint32 _id, uint256 _unitPrice,
                   uint32 _soldAmount, uint256 _priceSDC, uint256 _priceLUV);
 
-    SigVerifier.Data private _nonces;
-
     SDC private _sdc;
     LUV private _luv;
     Swap private _swap;
+
+    uint256 private paymentGas;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this");
@@ -36,7 +35,7 @@ contract Escrow {
         _;
     }
 
-    constructor(address _owner, uint32 _id, uint256 _price, uint32 _amount,
+    constructor(address _owner, uint32 _id, uint256 _price, uint32 _amount, uint256 _paymentGas,
                 address _sdcAddress, address _luvAddress, address _swapAddress)
                 public priceNotZero(_price) {
         _sdc = SDC(_sdcAddress);
@@ -48,6 +47,7 @@ contract Escrow {
         amount = _amount;
 
         owner = _owner;
+        paymentGas = _paymentGas;
     }
 
     function updatePrice(uint256 _newPriceLUV) external onlyOwner {
@@ -62,37 +62,41 @@ contract Escrow {
         return _swap.countSDCFromLUV(_amount * price);
     }
 
-    function getNonce(address _account) external view returns(uint256) {
-        return SigVerifier.getNonce(_nonces, _account);
-    }
-
     function payment(uint32 _sellAmount,
-                     address _from, address _spender, uint256 _value, bytes calldata _sig)
+                     address _from, uint256 _valueSDC, bytes calldata _sig)
     external enoughAmount(_sellAmount) {
-        bool isValid = SigVerifier.verify(_nonces, _from, _spender, _value, _sig);
-        require(isValid, "Invalid signature");
+        require(address(this).balance >= paymentGas * tx.gasprice,
+                "Insufficient ether to return gas");
 
-        uint256 sdcAmount = _sdc.allowance(msg.sender, address(this));
-        require(sdcAmount > 0, "No SDC approved for transfer");
-
-        uint256 balance = _sdc.balanceOf(msg.sender);
-        require(balance >= sdcAmount, "Insufficient funds for payment");
+        _sdc.approveSig(_from, address(this), _valueSDC, _sig);
 
         uint256 neededSDC = _swap.countSDCFromLUV(_sellAmount * price);
-        require(sdcAmount >= neededSDC, "Not enough SDC");
+        require(_valueSDC >= neededSDC, "Not enough SDC approved");
 
-        _sdc.transferFrom(msg.sender, address(this), neededSDC);
+        uint256 balance = _sdc.balanceOf(_from);
+        require(balance >= neededSDC, "Insufficient funds for payment");
+
+        _sdc.transferFrom(_from, address(this), neededSDC);
         _sdc.approve(address(_swap), neededSDC);
         uint256 luvAmount =_swap.swap(address(this));
 
         _updateAmount(amount - _sellAmount);
 
         emit Payment(_from, id, price, _sellAmount, neededSDC, luvAmount);
+
+        address(msg.sender).transfer(paymentGas * tx.gasprice);
     }
 
     function withdraw() external onlyOwner {
         uint256 luvAmount = _luv.balanceOf(address(this));
         _luv.transfer(owner, luvAmount);
+    }
+
+    function () payable external {}
+
+    function withdrawEth() payable external onlyOwner {
+        address payable addr = address(uint160(owner));
+        addr.transfer(address(this).balance);
     }
 
     function _updateAmount(uint32 _newAmount) private {

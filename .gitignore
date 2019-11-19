@@ -3,3 +3,4 @@ parse.sh
 node_modules/
 build/
 other/
+.secret

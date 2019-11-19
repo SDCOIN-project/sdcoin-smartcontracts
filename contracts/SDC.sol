@@ -28,6 +28,7 @@ contract SDC is ERC20, ERC20Detailed, ERC20Pausable, Ownable {
     whenNotPaused {
         bool isValid = SigVerifier.verify(_nonces, _from, _spender, _value, _sig);
         require(isValid, "Invalid signature");
+
         _approve(_from, _spender, _value);
     }
 

@@ -5,7 +5,7 @@ var web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'))
 
 contract('SDC', (accounts) => {
     it('ecrecover with web3.eth.sign and accounts', async function() {
-        var sdc = await SDC.deployed()
+        let sdc = await SDC.deployed()
 
         let isPrint = false
 
@@ -52,7 +52,7 @@ contract('SDC', (accounts) => {
     })
 
     it('ecrecover with web3.eth.sign/web3.eth.accounts.sign and wallet', async function() {
-        var sdc = await SDC.deployed()
+        let sdc = await SDC.deployed()
 
         let isPrint = false
 
