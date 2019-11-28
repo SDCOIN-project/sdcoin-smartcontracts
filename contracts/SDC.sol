@@ -8,7 +8,7 @@ import "./Ownable.sol";
 import "./Swap.sol";
 import "./SigVerifier.sol";
 
-contract SDC is ERC20, ERC20Detailed, ERC20Pausable, Ownable {
+contract SDC is ERC20Detailed, ERC20Pausable, Ownable {
     string private NAME = "SDCOIN";
     string private SYMBOL = "SDC";
     uint8 private DECIMALS = 18;
@@ -37,8 +37,8 @@ contract SDC is ERC20, ERC20Detailed, ERC20Pausable, Ownable {
         _mint(account, amount);
     }
 
-    function burn(address account, uint256 amount) external
+    function burnFrom(address account, uint256 amount) external
     whenNotPaused onlyOwnerOrAdmin {
-        _burn(account, amount);
+        _burnFrom(account, amount);
     }
 }

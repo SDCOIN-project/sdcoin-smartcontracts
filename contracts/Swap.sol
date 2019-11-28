@@ -18,18 +18,15 @@ contract Swap is Ownable {
         luv = LUV(_luvAddress);
     }
 
-    function swap(address receiver) external returns(uint256) {
+    function swap(address _receiver) external returns(uint256) {
         uint256 sdcAmount = sdc.allowance(msg.sender, address(this));
         require(sdcAmount > 0, "No SDC for conversion");
 
-        uint256 krw = sdcAmount * exchangeRate;
-        uint256 luvAmount = krw / divisor;
+        uint256 luvAmount = (sdcAmount * exchangeRate) / divisor;
+        require(luvAmount > 0, "Too few SDC to convert");
 
-        require(luvAmount > 0, "Too few sdc to convert");
-
-        sdc.transferFrom(msg.sender, address(this), sdcAmount);
-        luv.mint(receiver, luvAmount);
-        sdc.burn(address(this), sdcAmount);
+        sdc.burnFrom(msg.sender, sdcAmount);
+        luv.mint(_receiver, luvAmount);
 
         return luvAmount;
     }
