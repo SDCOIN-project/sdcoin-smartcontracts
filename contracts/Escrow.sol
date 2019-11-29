@@ -18,7 +18,7 @@ contract Escrow {
     LUV private _luv;
     Swap private _swap;
 
-    uint256 private paymentGas;
+    uint256 constant paymentGas = 194000;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this");
@@ -30,12 +30,7 @@ contract Escrow {
         _;
     }
 
-    modifier enoughAmount(uint32 _amount) {
-        require(amount >= _amount, "Not enough items");
-        _;
-    }
-
-    constructor(address _owner, uint32 _id, uint256 _price, uint32 _amount, uint256 _paymentGas,
+    constructor(address _owner, uint32 _id, uint256 _price, uint32 _amount,
                 address _sdcAddress, address _luvAddress, address _swapAddress)
                 public priceNotZero(_price) {
         _sdc = SDC(_sdcAddress);
@@ -47,7 +42,6 @@ contract Escrow {
         amount = _amount;
 
         owner = _owner;
-        paymentGas = _paymentGas;
     }
 
     function updatePrice(uint256 _newPriceLUV) external onlyOwner {
@@ -63,7 +57,8 @@ contract Escrow {
     }
 
     function payment(uint32 _sellAmount, address _from, bytes calldata _sig)
-    external enoughAmount(_sellAmount) {
+    external {
+        require(amount >= _sellAmount, "Not enough items");
         require(address(this).balance >= paymentGas * tx.gasprice,
                 "Insufficient ether to return gas");
 
@@ -75,12 +70,11 @@ contract Escrow {
 
         _sdc.transferFrom(_from, address(this), neededSDC);
         _sdc.approve(address(_swap), neededSDC);
-        uint256 luvAmount =_swap.swap(address(this));
+        uint256 luvAmount = _swap.swap(address(this));
 
         _updateAmount(amount - _sellAmount);
 
         emit Payment(_from, id, price, _sellAmount, neededSDC, luvAmount);
-
         address(msg.sender).transfer(paymentGas * tx.gasprice);
     }
 
@@ -91,9 +85,8 @@ contract Escrow {
 
     function () payable external {}
 
-    function withdrawEth() payable external onlyOwner {
-        address payable addr = address(uint160(owner));
-        addr.transfer(address(this).balance);
+    function withdrawEth() external onlyOwner {
+        msg.sender.transfer(address(this).balance);
     }
 
     function _updateAmount(uint32 _newAmount) private {
