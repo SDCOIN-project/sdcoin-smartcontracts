@@ -18,9 +18,13 @@
  *
  */
 
-const HDWalletProvider = require("@truffle/hdwallet-provider");
 const fs = require('fs');
-const mnemonic = fs.readFileSync(".secret").toString().trim();
+
+const HDWalletProvider = require("@truffle/hdwallet-provider");
+const mnemonic = fs.existsSync('./.mnemonics') ? fs.readFileSync(".mnemonics").toString().trim() : '';
+
+const PrivateKeyProvider = require("truffle-privatekey-provider");
+const privateKey = fs.existsSync('./.privatekey') ? fs.readFileSync(".privatekey").toString().trim() : '';
 
 module.exports = {
   /**
@@ -71,7 +75,8 @@ module.exports = {
     },
 
     rinkeby: {
-      provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/3733109dd9304d158d8def80a87fbcfe`),
+      // provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/3733109dd9304d158d8def80a87fbcfe`),
+      provider: () => new PrivateKeyProvider(privateKey, `https://rinkeby.infura.io/v3/3733109dd9304d158d8def80a87fbcfe`),
       network_id: 4,       // Rinkeby's id
       host: "127.0.0.1",   // Localhost (default: none)
       port: 8545,          // Standard Ethereum port (default: none)
