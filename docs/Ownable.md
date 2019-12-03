@@ -1,19 +1,19 @@
 # Ownable
 
-## Публичные методы
+## Public methods
 
 |Function|Parameters|Return|Description|
 |---|---|---|---|
-|transferOwnership|address newOwner|-//-|Передаёт права на владение контрактом другому пользователю. Может вызываться текущим владельцем|
-|owner|-//-|address|Возвращает адрес владельца контракта|
-|addAdmin|address account|-//-|Добавляет нового админа. Может вызываться владельцем или админами|
-|removeAdmin|address account|-//-|Удаляет существующего админа. Может вызываться владельцем или админами. Проверяет, что админ существует|
-|isAdmin|address account|bool|Возвращает, является ли пользователь админом|
+|transferOwnership|address newOwner|-//-|Transfers ownership rights to newOwner. Can be called only by current contract owner|
+|owner|-//-|address|Returns address of current contract owner|
+|addAdmin|address account|-//-|Adds new admin. Can be called only by owner or admin|
+|removeAdmin|address account|-//-|Removes existing admin. Can be called only by owner or admin|
+|isAdmin|address account|bool|Checks if account is admin|
 
-## События
+## Events
 
 |Event|Parameters|Description|
 |---|---|---|
-|OwnershipTransferred|address indexed previousOwner - предыдущий владелец контракта, address indexed newOwner - новый владелец контракта|Событие вызывается, когда меняется владелец контракта|
-|WhitelistAdminAdded|address indexed account - новый админ|Событие вызывается, когда добавляется новый админ|
-|WhitelistAdminRemoved|address indexed account - удалённый админ|Событие вызывается, когда удаляется админ|
+|OwnershipTransferred|address indexed previousOwner - previous owner of contract, address indexed newOwner - new contract owner|Emits when contract owner changes|
+|WhitelistAdminAdded|address indexed account - new admin|Emits when new admin added|
+|WhitelistAdminRemoved|address indexed account - removed admin|Emits when admin removed|

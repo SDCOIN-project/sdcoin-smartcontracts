@@ -1,15 +1,15 @@
 # LUV
 
-## Наследование
+## Inheritance
 
 + ERC20
 + ERC20Detailed
 + Ownable
 
-## Публичные методы
+## Public methods
 
 |Function|Parameters|Return|Description|
 |---|---|---|---|
-|constructor|-//-|-//-|Создаёт контракт и зачисляет все токены на адрес создателя|
-|mint|address account, uint256 amount|-//-|Создаёт новые токены. Может вызываться владельцем и админами|
-|burn|address account, uint256 amount|-//-|Сжигает cуществующие токены. Может вызываться владельцем и админами|
+|constructor|-//-|-//-|Creates contract and mints all tokens on his address|
+|mint|address account, uint256 amount|-//-|Creates new tokens. Can be called by contract owner or admin|
+|burn|address account, uint256 amount|-//-|Burns existing tokens. Can be called by contract owner or admin|

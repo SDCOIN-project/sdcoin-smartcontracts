@@ -1,39 +1,54 @@
 # Escrow
 
-## Наследование
+## Inheritance
 
 + Ownable
 
-## Публичные методы
+## Public methods
 
 |Function|Parameters|Return|Description|
 |---|---|---|---|
-|constructor|address _retailer, uint256 _price, uint256 _amount, address _sdcAddress, address _luvAddress, address _swapAddress|-//-|Во время создания контракта адрес retailer будет установлен в качестве владельца контракта. _price - цена за штуку в LUV. _amount - количество товара. Остальные адреса сохранятся в контракте для взаимодействия в дальнейшем (см. payment)|
-|updatePrice|uint256 _newPriceLUV|-//-|Устанавливает новую цену для товара. Может вызываться только владельцем контракта|
-|updateAmount|uint32 _newAmount|-//-|Устанавливает новое количество товара. Может вызываться только владельцем контракта|
-|getPriceSDC|uint32 _amount|-//-|uint256|Подсчитывает, сколько SDC требуется заплатить за количество товаров (_amount)|
-|payment|uint32 _sellAmount, address _from, bytes calldata _sig|-//-|Проводит платёж за товар. На вход передаётся количество товара и данные, необходимые для верификации пользователя. Проверяет, чтобы было достаточно единиц товара (amount)|
-|withdraw|-//-|-//-|Переводит средства за платеж со счёта контракта на счёт продавца. Может вызываться только владельцем контракта|
-|function () payable|---|---|Fallback функция для получения средств при переводах|
-|withdrawEth|---|---|Переводит все средства в ETH на аккаунт владельца. Может вызываться только владельцем контракта|
+|constructor|address _owner, uint256 _price, uint32 _amount, address _sdcAddress, address _luvAddress, address _swapAddress|-//-|Creates instance of escrow contract and assigns _owner as owner/retailer. Stores other contract addresses to use later (check payment)|
+|updatePrice|uint256 _newPriceLUV|-//-|Sets new price for product. Can be called only by contract owner|
+|updateAmount|uint32 _newAmount|-//-|Sets new amount of product. Can be called only by contract owner|
+|getPriceSDC|uint32 _amount|-//-|uint256|Counts amount of SDC which is necessary to buy given amount of product|
+|payment|uint32 _sellAmount, address _from, bytes calldata _sig|-//-|Pays SDC for given amount of product. Checks whether contract has enough amount of product and throws if it's not enough. Emits event on successful payment|
+|withdraw|-//-|-//-|Withdraws all LUVs to owner (retailer). Can be called only by contract owner|
+|function () payable|-//-|-//-|Fallback function to accept transferred ETH|
+|withdrawEth|-//-|-//-|Withdraws all ETH to owner (retailer). Can be called only by contract owner|
 
-## Геттеры
+## Getters
 
 |Getter|Type|Description|
 |---|---|---|
-|id|uint32|ID товара, за которым закреплен контракт|
-|price|uint160|Цена в LUV за единицу товара|
-|amount|uint32|Количество товара в наличии|
-|owner|address|Владелец контракта (продавец)|
+|id|uint32|Product ID|
+|price|uint256|Product price|
+|amount|uint32|Product amount available for purchasing|
+|owner|address|Owner(retailer) of the contract|
 
-## События
+## Events
 
 |Event|Parameters|Description|
 |---|---|---|
-|Payment|`address sender` - аккаунт, отправивший платеж, `uint32 id` - id товара в контракте, `uint256 _unitPrice` - цена за штуку товара в LUV, `uint32 _soldAmount` - проданное количество товара, `uint256 _priceSDC` - цена платежа в SDC, `uint256 _priceLUV` - цена платежа в LUV|Событие посылается, когда происходит успешный платеж за товар|
+|Payment|`address sender` - sender of payment, `uint32 id` - product ID, `uint256 _unitPrice` - product unit price in LUV, `uint32 _soldAmount` - sold amount of product, `uint256 _priceSDC` - payment price in SDC, `uint256 _priceLUV` - payment price in LUV|Emits on successful payment|
 
 ## payment
 
-> uint32 _sellAmount, address _from, bytes calldata _sig
-> Пример можно найти в `test/testEscrow.js`
-Используется та же схема, что и в approveSig в SDC контракте. Пользователь отправляет транзакцию на сервер, сервер её подписывает и отправляет на контракт, контракт проверяет сигнатуру пользователя и проводит платёж. В качестве получателя средств в сигнатуре должен использоваться адрес Escrow контракта
+> payment(uint32 _sellAmount, address _from, bytes calldata _sig)
+> Example can be found in `test/testEscrow.js`
+
+The flow is next:
+
+1. User obtains his current nonce from escrow via getNonce() method
+2. User creates signature and passes it to payment method arguments
+3. User sends transaction with payment method
+4. Contract processes payment and returns all fee which user spent
+    + if contract doesn't have enough products, it reverts
+    + if user doesn't have enough SDC contract reverts
+    + if contract doesn't have enough ETH to pay user fee, it reverts
+    + contract uses signature to approve SDC needed for successful payment
+    + then it transfers SDC and approves them to Swap contract
+    + swaps SDC to LUV
+    + updates remaining amount of products
+    + emits event about successful payment
+    + pays user ETH for gas

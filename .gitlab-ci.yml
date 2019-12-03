@@ -1,0 +1,13 @@
+test:
+  image: node:10
+  cache:
+    paths:
+      - node_modules
+  before_script:
+    - npm i
+  script:
+    - npm run test
+  tags:
+    - docker
+  only:
+    - merge_request

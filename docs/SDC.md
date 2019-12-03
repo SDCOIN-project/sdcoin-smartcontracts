@@ -1,102 +1,18 @@
 # SDC
 
-## Наследование
+## Inheritance
 
 + ERC20
 + ERC20Detailed
 + ERC20Pausable
 + Ownable
 
-## Публичные методы
+## Public methods
 
 |Function|Parameters|Return|Description|
 |---|---|---|---|
-|constructor|-//-|-//-|Создаёт контракт и переводит все средства на счёт владельца|
-|getNonce|address _account|uint256|Возвращает nonce для пользователя. Nonce нужен, чтобы не позволить пользователям использовать сигнатуру, с которой уже осуществлялся перевод. Не работает, когда контракт на паузе|
-|approveSig|address _from, address _spender, uint256 _value, bytes calldata _sig|-//-|Обёртка над стандартным approve из ERC20, которая позволяет разрешить перевод токенов с одного аккаунта на другой, при этом инициируя процесс с третьего аккаунта. Т.е. комиссия за транзакцию снимается с третьего лица, при этом разрешая перевод средств первого. Не работает, когда контракт на паузе|
-|mint|address account, uint256 amount|-//-|Создаёт новые токены. Может вызываться только админом или владельцем. Не работает, когда контракт на паузе|
-|burn|address account, uint256 amount|-//-|Сжигает существующие токены. Может вызываться только админом или владельцем. Не работает, когда контракт на паузе|
-
-## approveSig
-
-> address _from, address _spender, uint256 _value, bytes calldata _sig
-
-Обычно, чтобы разрешить какому-либо аккаунту перевод некой суммы со своего аккаунта, в ERC20 используется метод `approve(address spender, uint256 value)`.
-
-Параметры:
-
-+ `address spender` - адрес аккаунта, которому будет разрешено переводить средства
-+ `uint256 value` - сумма, которую разрешено переводить
-
-Порядок работы примерно следующий:
-
-1. Владелец средств разрешает spender трату определённой суммы: `approve(spender, value)`
-2. Тот, кому разрешено тратить, может узнать сумму через `allowance(owner, spender)`
-3. Когда аккаунт узнал, сколько можно перевести, он вызывает для перевода `transferFrom(sender, recipient, amount)`
-
-В данной ситуации комиссия за approve списывается в ETH с владельца средств.
-Комиссия за transferFrom снимается с того, кто её вызывает, т.е. с того, кому разрешен перевод средств. Снимается также в ETH.
-
-### Проблема
-
-Комиссия в ETH снимается с аккаунта, который подписывает транзакцию.
-
-Рассмотрим метод swap в Swap контракте.
-Перед его вызовом требуется разрешить перевод средств для конвертации.
-То есть пользователь должен вызвать approve.
-Комиссия при этом также снимается с пользователя, т.к. он подписывает транзакцию.
-Поскольку в нашем случае у пользователей не обязательно наличие ETH, то они не смогут использовать approve.
-
-### Решение
-
-Мы будем использовать сервер для подписи транзакций.
-На сервере будет лежать ETH, который будут класть владельцы.
-На сервер для подписи будут присылаться транзакции, которые создаются пользователями.
-Сервер подписывает транзакции и отправляет в chain.
-Для того, чтобы в chain можно было понять, какому пользователю требуется перевести деньги, мы отправляем эту информацию вместе с информацией для approve.
-Для подтверждения того, что вызвавший человек, это тот же аккаунт, с которого разрешается перевод, отправляется уникальная сигнатура, которая генерируется на стороне пользователя.
-
-Для генерации уникальной сигнатуры для каждой транзакции, используется nonce, который хранится в SDC контракте для каждого пользователя.
-
-Примерный алгоритм создания сигнатуры:
-> Полный пример можно найти в `test/testSDC.js`
-
-```javascript
-var Web3 = require('web3')
-var web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'))
-
-...
-
-// получение nonce пользователя
-let nonce = await sdc.getNonce.call(addr1)
-nonce = parseInt(nonce)
-
-// упаковка параметров для хеширования
-let b = web3.eth.abi.encodeParameters(
-    ['bytes20', 'bytes20', 'uint256'],
-    [addr1, addr2, nonce])
-
-// хеширование
-let h = web3.utils.sha3(b)
-
-// 1 вариант - подписывание хеша приватным ключом пользователя
-let sign_result = await web3.eth.accounts.sign(h, privateKey)
-let sig = sign_result.signature
-
-// 2 вариант - подписывание через адрес. web3 должен знать информацию об аккаунте
-let sig = await web3.eth.sign(h, addr1)
-
-//---
-sig = web3.utils.hexToBytes(sig)
-```
-
-Когда сервер получает информацию для approve и сигнатуру, сервер вызывает у SDC контракта метод `approveSig(uint256 _value, address _from, address _spender, bytes calldata _sig)`.
-Параметры:
-
-+ `uint256 _value` - сумма, которую разрешается тратить
-+ `address _from` - адрес отправителя, т.е. аккаунт, который разрешает перевод своих средств
-+ `address _spender` - адрес аккаунта, которыму разрешается трата средств
-+ `bytes _sig` - сигнатура
-
-Если валидация сигнатуры провалилась, то будет выброшена ошибка.
-В случае успеха средства будут разрешены для траты, а nonce у отправителя изменится.
+|constructor|-//-|-//-|Creates contract and mints all tokens on his address|
+|getNonce|address _account|uint256|Returns user nonce. It is needed to create unique signatures for each payment. Doesn't work when contract is on pause|
+|approveSig|address _from, address _spender, uint256 _value, bytes calldata _sig|-//-|Works like default approve from ERC20, but it can be called from some account which has signature of sender. Uses signature verification (check SigVerifier.md). Doesn't work when contract is on pause|
+|mint|address account, uint256 amount|-//-|Creates new tokens. Can be called by contract owner or admin. Doesn't work when contract is on pause|
+|burn|address account, uint256 amount|-//-|Burns existing tokens. Can be called by contract owner or admin. Doesn't work when contract is on pause|

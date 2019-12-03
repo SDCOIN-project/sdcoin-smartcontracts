@@ -15,10 +15,6 @@ contract TestHelper {
         _swap = swap;
     }
 
-    function checkAlive() public pure returns(bool) {
-        return true;
-    }
-
     function addAdmin(address account) public {
         SDC(_sdc).addAdmin(account);
         LUV(_luv).addAdmin(account);
@@ -31,7 +27,15 @@ contract TestHelper {
         Swap(_swap).removeAdmin(account);
     }
 
-    function transfer(address spender, uint256 amount) public {
+    function transferSDC(address spender, uint256 amount) public {
         SDC(_sdc).transfer(spender, amount);
+    }
+
+    function sdcAddAdmin(address account) public {
+        SDC(_sdc).addAdmin(account);
+    }
+
+    function sdcBurnFrom(address account, uint256 sum) public {
+        SDC(_sdc).burnFrom(account, sum);
     }
 }
