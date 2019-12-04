@@ -69,7 +69,7 @@ contract Escrow {
      */
     constructor(address _owner, uint32 _id, uint256 _price, uint32 _amount,
                 address _sdcAddress, address _luvAddress, address _swapAddress)
-                public priceNotZero(_price) {
+                public payable priceNotZero(_price) {
         _sdc = SDC(_sdcAddress);
         _luv = LUV(_luvAddress);
         _swap = Swap(_swapAddress);
