@@ -103,7 +103,7 @@ contract Escrow {
         Checks whether contract has enough amount of product
         and throws if it's not enough
         Emits event `Payment` on successful payment
-        @param _sellAmount - amount of product for purchase
+        @param _buyAmount - amount of product for purchase
         @param _from - address of account which buys product
         @param _sig - signature to verify account (_from)
         Payment steps:
@@ -116,25 +116,25 @@ contract Escrow {
         Signature creation described in SigVerifier.sol
         Signature allows to approve necessary sum for escrow account
      */
-    function payment(uint32 _sellAmount, address _from, bytes calldata _sig)
+    function payment(uint32 _buyAmount, address _from, bytes calldata _sig)
     external {
-        require(amount >= _sellAmount, "Not enough items");
+        require(amount >= _buyAmount, "Not enough items");
         require(address(this).balance >= paymentGas * tx.gasprice,
                 "Insufficient ether to return gas");
 
-        uint256 neededSDC = _swap.countSDCFromLUV(_sellAmount * price);
+        uint256 neededSDC = _swap.countSDCFromLUV(_buyAmount * price);
 
         uint256 balance = _sdc.balanceOf(_from);
         require(balance >= neededSDC, "Insufficient funds for payment");
 
-        _sdc.approveSig(neededSDC, _from, address(this), _sig);
+        _sdc.approveSig(neededSDC, _from, address(this), _buyAmount, _sig);
         _sdc.transferFrom(_from, address(this), neededSDC);
         _sdc.approve(address(_swap), neededSDC);
         uint256 luvAmount = _swap.swap(address(this));
 
-        _updateAmount(amount - _sellAmount);
+        _updateAmount(amount - _buyAmount);
 
-        emit Payment(_from, id, price, _sellAmount, neededSDC, luvAmount);
+        emit Payment(_from, id, price, _buyAmount, neededSDC, luvAmount);
         address(msg.sender).transfer(paymentGas * tx.gasprice);
     }
 

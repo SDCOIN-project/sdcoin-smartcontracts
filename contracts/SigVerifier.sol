@@ -23,6 +23,7 @@ library SigVerifier {
         @param _self - library object which contains nonces
         @param _from - account which creates signature
         @param _to - account which somehow interacts with _from
+        @param _amount - some number which has to be part of signature
         @param _sig - signature for verifing
         @dev Steps to create valid signature
         1. Get current nonce for _from
@@ -33,28 +34,25 @@ library SigVerifier {
         3. Take SHA3 hash from packed parameters
         4. Sign hash with _from's private key
      */
-    function verify(Data storage _self, address _from, address _to, bytes memory _sig)
+    function verify(Data storage _self, address _from, address _to, uint256 _amount, bytes memory _sig)
     internal returns(bool) {
         require(_sig.length == 65, "Invalid signature length");
 
-        bytes12 offset;
-
         bytes32 prefixed = keccak256(abi.encodePacked(
             APPROVE_MSG_PREFIX, keccak256(abi.encodePacked(
-                bytes20(_from), offset,
-                bytes20(_to), offset,
+                bytes32(bytes20(_from)),
+                bytes32(bytes20(_to)),
+                _amount,
                 _self._nonces[_from]))));
-
-        bytes memory sig = _sig;
 
         bytes32 r;
         bytes32 s;
         uint8 v;
 
         assembly {
-            r := mload(add(sig, 0x20))
-            s := mload(add(sig, 0x40))
-            v := byte(0, mload(add(sig, 0x60)))
+            r := calldataload(add(_sig, 0x44))
+            s := calldataload(add(_sig, 0x64))
+            v := byte(0, calldataload(add(_sig, 0x84)))
         }
 
         if (v == 0 || v == 1)

@@ -33,9 +33,9 @@ contract SDC is ERC20Detailed, ERC20Pausable, Ownable {
         but uses _from as owner of tokens. A signature is used to verify
         that _from wants to approve his tokens to _spender.
      */
-    function approveSig(uint256 _value, address _from, address _spender, bytes calldata _sig) external
+    function approveSig(uint256 _value, address _from, address _spender, uint32 _amount, bytes calldata _sig) external
     whenNotPaused {
-        bool isValid = SigVerifier.verify(_nonces, _from, _spender, _sig);
+        bool isValid = SigVerifier.verify(_nonces, _from, _spender, _amount, _sig);
         require(isValid, "Invalid signature");
 
         _approve(_from, _spender, _value);
