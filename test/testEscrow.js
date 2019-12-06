@@ -14,19 +14,19 @@ contract('Escrow', (accounts) => {
         swap = await Swap.deployed()
     })
 
-    let getSignature = async (sdcInst, addr1, addr2, amount) => {
+    let getSignature = async (sdcInst, addr1, addr2) => {
         let nonce = await sdcInst.getNonce.call(addr1).then(parseInt)
         let b = web3.eth.abi.encodeParameters(
-            ['bytes20', 'bytes20', 'uint256', 'uint256'],
-            [addr1, addr2, amount, nonce])
+            ['bytes20', 'bytes20', 'uint256'],
+            [addr1, addr2, nonce])
         let h = web3.utils.sha3(b)
         return web3.eth.sign(h, addr1).then(web3.utils.hexToBytes)
     }
 
-    let payment = async (escrow, buyerAddr, fromAddr, buyAmount) => {
-        let sig = await getSignature(sdc, buyerAddr, escrow.address, buyAmount)
-        let est = await escrow.payment.estimateGas(buyAmount, buyerAddr, sig, {from: fromAddr})
-        let tx = await escrow.payment.sendTransaction(buyAmount, buyerAddr, sig, {from: fromAddr, gas: est})
+    let payment = async (escrow, buyerAddr, fromAddr) => {
+        let sig = await getSignature(sdc, buyerAddr, escrow.address)
+        let est = await escrow.payment.estimateGas(buyerAddr, sig, {from: fromAddr})
+        let tx = await escrow.payment.sendTransaction(buyerAddr, sig, {from: fromAddr, gas: est})
         return {tx: tx, est: est}
     }
 
@@ -56,11 +56,10 @@ contract('Escrow', (accounts) => {
         let tester = await TestHelper.deployed()
         await tester.transferSDC(buyerAddr, sdcStartBalance)
 
-        let buyAmount = 3
         for (let i = 0; i < 5; i++) {
             let ethBalance = await web3.eth.getBalance(fromAddr).then(parseInt)
 
-            await payment(escrow, buyerAddr, fromAddr, buyAmount)
+            await payment(escrow, buyerAddr, fromAddr)
 
             let newEthBalance = await web3.eth.getBalance(fromAddr).then(parseInt)
             let diff = (newEthBalance - ethBalance)/Escrow.defaults().gasPrice

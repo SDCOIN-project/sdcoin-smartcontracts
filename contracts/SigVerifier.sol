@@ -2,8 +2,7 @@ pragma solidity ^0.5.0;
 
 library SigVerifier {
     struct Data {
-        /**
-            @dev Nonces used to create unique signature
+        /** @dev Nonces used to create unique signature
             Every user has personal nonce counter which increases
             every time signature verified
         */
@@ -18,12 +17,10 @@ library SigVerifier {
         return _self._nonces[_account];
     }
 
-    /**
-        @notice Verifies signature
+    /** @notice Verifies signature
         @param _self - library object which contains nonces
         @param _from - account which creates signature
         @param _to - account which somehow interacts with _from
-        @param _amount - some number which has to be part of signature
         @param _sig - signature for verifing
         @dev Steps to create valid signature
         1. Get current nonce for _from
@@ -34,7 +31,7 @@ library SigVerifier {
         3. Take SHA3 hash from packed parameters
         4. Sign hash with _from's private key
      */
-    function verify(Data storage _self, address _from, address _to, uint256 _amount, bytes memory _sig)
+    function verify(Data storage _self, address _from, address _to, bytes memory _sig)
     internal returns(bool) {
         require(_sig.length == 65, "Invalid signature length");
 
@@ -42,7 +39,6 @@ library SigVerifier {
             APPROVE_MSG_PREFIX, keccak256(abi.encodePacked(
                 bytes32(bytes20(_from)),
                 bytes32(bytes20(_to)),
-                _amount,
                 _self._nonces[_from]))));
 
         bytes32 r;
@@ -50,9 +46,9 @@ library SigVerifier {
         uint8 v;
 
         assembly {
-            r := calldataload(add(_sig, 0x44))
-            s := calldataload(add(_sig, 0x64))
-            v := byte(0, calldataload(add(_sig, 0x84)))
+            r := calldataload(add(_sig, 0x24))
+            s := calldataload(add(_sig, 0x44))
+            v := byte(0, calldataload(add(_sig, 0x64)))
         }
 
         if (v == 0 || v == 1)

@@ -12,16 +12,15 @@ contract('SDC', (accounts) => {
         let addr2 = accounts[1]
 
         let value = 1337
-        let amount = 12
 
         let nonce = await sdc.getNonce.call(addr1).then(parseInt)
         let b = web3.eth.abi.encodeParameters(
-            ['bytes20', 'bytes20', 'uint256', 'uint256'],
-            [addr1, addr2, amount, nonce])
+            ['bytes20', 'bytes20', 'uint256'],
+            [addr1, addr2, nonce])
         let h = web3.utils.sha3(b)
         let sig = await web3.eth.sign(h, addr1).then(web3.utils.hexToBytes)
 
-        await sdc.approveSig.sendTransaction(value, addr1, addr2, amount, sig)
+        await sdc.approveSig.sendTransaction(value, addr1, addr2, sig)
         
         let newNonce = await sdc.getNonce.call(addr1).then(parseInt)
         assert.strictEqual(newNonce, nonce + 1,
@@ -38,16 +37,15 @@ contract('SDC', (accounts) => {
         let addr2 = acc2.address
 
         let value = 1337
-        let amount = 12
 
         let nonce = await sdc.getNonce.call(addr1).then(parseInt)
         let b = web3.eth.abi.encodeParameters(
-            ['bytes20', 'bytes20', 'uint256', 'uint256'],
-            [addr1, addr2, amount, nonce])
+            ['bytes20', 'bytes20', 'uint256'],
+            [addr1, addr2, nonce])
         let h = web3.utils.sha3(b)
         let sig = await web3.eth.sign(h, addr1).then(web3.utils.hexToBytes)
 
-        await sdc.approveSig.sendTransaction(value, addr1, addr2, amount, sig)
+        await sdc.approveSig.sendTransaction(value, addr1, addr2, sig)
 
         let newNonce = await sdc.getNonce.call(addr1).then(parseInt)
         assert.strictEqual(newNonce, nonce + 1,
@@ -64,18 +62,17 @@ contract('SDC', (accounts) => {
         let addr2 = acc2.address
 
         let value = 1337
-        let amount = 12
 
         let nonce = await sdc.getNonce.call(addr1).then(parseInt)
         let b = web3.eth.abi.encodeParameters(
-            ['bytes20', 'bytes20', 'uint256', 'uint256'],
-            [addr1, addr2, amount, nonce])
+            ['bytes20', 'bytes20', 'uint256'],
+            [addr1, addr2, nonce])
         let h = web3.utils.sha3(b)
 
         let signResult = await web3.eth.accounts.sign(h, priv1)
         let sig = web3.utils.hexToBytes(signResult.signature)
 
-        await sdc.approveSig.sendTransaction(value, addr1, addr2, amount, sig)
+        await sdc.approveSig.sendTransaction(value, addr1, addr2, sig)
 
         let newNonce = await sdc.getNonce.call(addr1).then(parseInt)
         assert.strictEqual(newNonce, nonce + 1,

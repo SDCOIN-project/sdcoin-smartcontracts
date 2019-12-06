@@ -28,16 +28,13 @@ contract SDC is ERC20Detailed, ERC20Pausable, WhitelistedRole {
         return SigVerifier.getNonce(_nonces, _account);
     }
 
-    /**
-        @notice Approves sum for spending like approve() method,
+    /** @notice Approves sum for spending like approve() method,
         but uses _from as owner of tokens. A signature is used to verify
         that _from wants to approve his tokens to _spender.
      */
-    function approveSig(uint256 _value, address _from, address _spender, uint32 _amount, bytes calldata _sig) external
+    function approveSig(uint256 _value, address _from, address _spender, bytes calldata _sig) external
     whenNotPaused {
-        bool isValid = SigVerifier.verify(_nonces, _from, _spender, _amount, _sig);
-        require(isValid, "Invalid signature");
-
+        require(SigVerifier.verify(_nonces, _from, _spender, _sig), "Invalid signature");
         _approve(_from, _spender, _value);
     }
 
@@ -48,8 +45,7 @@ contract SDC is ERC20Detailed, ERC20Pausable, WhitelistedRole {
         _mint(_account, _amount);
     }
 
-    /**
-        @notice Burns amount of SDC from account and removes
+    /** @notice Burns amount of SDC from account and removes
         allowance for this amount
         Can be used only by owner or admin of LUV contract
      */
