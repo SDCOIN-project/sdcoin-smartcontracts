@@ -16,16 +16,17 @@ module.exports = async function(deployer, network, accounts) {
     let luv = await LUV.deployed()
     let swap = await Swap.deployed()
 
-    sdc.addAdmin(Swap.address)
-    luv.addAdmin(Swap.address)
+    sdc.addWhitelisted(Swap.address)
+    luv.addWhitelisted(Swap.address)
 
     await deployer.deploy(TestHelper)
     let tester = await TestHelper.deployed()
     tester.setAddresses(SDC.address, LUV.address, Swap.address)
 
-    sdc.addAdmin(TestHelper.address)
-    luv.addAdmin(TestHelper.address)
-    swap.addAdmin(TestHelper.address)
+    sdc.addWhitelisted(TestHelper.address)
+    sdc.addPauser(TestHelper.address)
+    luv.addWhitelisted(TestHelper.address)
+    swap.addWhitelisted(TestHelper.address)
 
     sdc.transfer(TestHelper.address, 0xfffffffff)
   } else if (network == "rinkeby") {
@@ -40,8 +41,8 @@ module.exports = async function(deployer, network, accounts) {
     let sdc = await SDC.deployed()
     let luv = await LUV.deployed()
 
-    sdc.addAdmin(Swap.address, {from: addr0})
-    luv.addAdmin(Swap.address, {from: addr0})
+    sdc.addWhitelisted(Swap.address, {from: addr0})
+    luv.addWhitelisted(Swap.address, {from: addr0})
 
     // Escrow
     let id = 0, price = 1, amount = 1000

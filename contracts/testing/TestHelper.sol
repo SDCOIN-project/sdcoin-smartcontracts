@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.0;
 
 import "../SDC.sol";
 import "../LUV.sol";
@@ -16,26 +16,18 @@ contract TestHelper {
     }
 
     function addAdmin(address account) public {
-        SDC(_sdc).addAdmin(account);
-        LUV(_luv).addAdmin(account);
-        Swap(_swap).addAdmin(account);
+        SDC(_sdc).addWhitelisted(account);
+        LUV(_luv).addWhitelisted(account);
+        Swap(_swap).addWhitelisted(account);
     }
 
     function removeAdmin(address account) public {
-        SDC(_sdc).removeAdmin(account);
-        LUV(_luv).removeAdmin(account);
-        Swap(_swap).removeAdmin(account);
+        SDC(_sdc).removeWhitelisted(account);
+        LUV(_luv).removeWhitelisted(account);
+        Swap(_swap).removeWhitelisted(account);
     }
 
     function transferSDC(address spender, uint256 amount) public {
         SDC(_sdc).transfer(spender, amount);
-    }
-
-    function sdcAddAdmin(address account) public {
-        SDC(_sdc).addAdmin(account);
-    }
-
-    function sdcBurnFrom(address account, uint256 sum) public {
-        SDC(_sdc).burnFrom(account, sum);
     }
 }

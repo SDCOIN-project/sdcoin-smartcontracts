@@ -35,7 +35,7 @@ In `module.exports.networks` should be next section (note that you should put yo
 
 ```js
     rinkeby: {
-      provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/<YOUR-PROJECT-ID>`),
+      provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/<INFURA-PROJECT-ID>`),
       network_id: 4,       // Rinkeby's id
       host: "127.0.0.1",   // Localhost (default: none)
       port: 8545,          // Standard Ethereum port (default: none)

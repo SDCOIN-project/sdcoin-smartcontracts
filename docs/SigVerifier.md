@@ -53,14 +53,11 @@ let b = web3.eth.abi.encodeParameters(
 let h = web3.utils.sha3(b)
 
 // option 1 - sign hash via private key
-let sign_result = await web3.eth.accounts.sign(h, privateKey)
-let sig = sign_result.signature
+let signResult = await web3.eth.accounts.sign(h, privateKey)
+let sig = web3.utils.hexToBytes(signResult.signature)
 
 // option 2 - sign hash via address. web3 should private key of _from
-let sig = await web3.eth.sign(h, _from)
-
-//---
-sig = web3.utils.hexToBytes(sig)
+let sig = await web3.eth.sign(h, _from).then(web3.utils.hexToBytes)
 ```
 
 When someone gets non-verified signature he can use it to make some action on behalf of tokens owner. So user can pass his signature to escrow contract and it can approve needed tokens for payment. There is method named `approveSig` in SDC contract to approve some amount of tokens with owner's signature.

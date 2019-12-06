@@ -1,8 +1,10 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.0;
 
 import "./SDC.sol";
 import "./LUV.sol";
 import "./Swap.sol";
+
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
 /**
     @title Escrow contract. Has ali-pay functionality
@@ -10,16 +12,13 @@ import "./Swap.sol";
     Used as storage for LUV, which can be withdrawed by contract owner
     Accepts payments in SDC, converts them to LUV and stores them
  */
-contract Escrow {
+contract Escrow is Ownable {
     /// @notice product id
     uint32 public id;
     /// @notice product price
     uint256 public price;
     /// @notice product amount
     uint32 public amount;
-
-    /// @notice contract owner. Same as the retailer of the product
-    address public owner;
 
     /** @notice Emits on payment
         @param _sender - account, which buys product
@@ -43,13 +42,7 @@ contract Escrow {
         @dev amount of gas which is near the amount of gas spent in one payment
         Used to compensate gas, which user spends on one payment
      */
-    uint256 constant paymentGas = 195000;
-
-    /// @dev Checks that method was called by contract owner
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can call this");
-        _;
-    }
+    uint256 constant paymentGas = 200000;
 
     /// @dev Checks that passed price is not zero
     modifier priceNotZero(uint256 _price) {
@@ -78,12 +71,13 @@ contract Escrow {
         price = _price;
         amount = _amount;
 
-        owner = _owner;
+        transferOwnership(_owner);
     }
 
     /// @notice Updates price of product
     /// Can be called only by contract owner
-    function updatePrice(uint256 _newPriceLUV) external onlyOwner {
+    function updatePrice(uint256 _newPriceLUV) external
+    onlyOwner priceNotZero(_newPriceLUV) {
         price = _newPriceLUV;
     }
 
@@ -141,11 +135,13 @@ contract Escrow {
     /// @notice Withdraws all LUVs to owner (retailer)
     /// Can be called only by contract owner
     function withdraw() external onlyOwner {
-        _luv.transfer(owner, _luv.balanceOf(address(this)));
+        _luv.transfer(owner(), _luv.balanceOf(address(this)));
     }
 
-    /// @notice Fallback function to accept transferred ETH
-    function () payable external {}
+    /// @notice Fallback function to accept ether
+    function () external payable {
+        require(msg.data.length == 0, "Fallback function only accepts ether");
+    }
 
     /// @notice Withdraws all ETH to owner (retailer)
     /// Can be called only by contract owner

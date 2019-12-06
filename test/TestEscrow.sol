@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.0;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
@@ -8,6 +8,7 @@ import "../contracts/SDC.sol";
 import "../contracts/LUV.sol";
 import "../contracts/Escrow.sol";
 import "../contracts/testing/TestHelper.sol";
+import "./ThrowProxy.sol";
 
 contract TestEscrow {
 
@@ -41,13 +42,39 @@ contract TestEscrow {
     function testUpdatePrice() public {
         uint32 newPrice = 68734;
         Assert.notEqual(escrow.price(), newPrice, "Choose another new price");
+
+        ThrowProxy proxy = new ThrowProxy(address(escrow));
+        address payable proxyPay = address(uint160(address(proxy)));
+        Escrow(proxyPay).updatePrice(newPrice);
+        bool r = proxy.execute.gas(100000)();
+        Assert.isFalse(r, "Should throw cause account is not owner");
+
         escrow.updatePrice(newPrice);
         Assert.equal(escrow.price(), newPrice, "Invalid price update");
+    }
+
+    function testUpdateZeroPrice() public {
+        Escrow escrowPrice = new Escrow(eOwner, eId, ePrice, eAmount,
+                            address(sdc), address(luv), address(swap));
+        ThrowProxy proxy = new ThrowProxy(address(escrowPrice));
+        escrowPrice.transferOwnership(address(proxy));
+
+        address payable proxyPay = address(uint160(address(proxy)));
+        Escrow(proxyPay).updatePrice(0);
+        bool r = proxy.execute.gas(100000)();
+        Assert.isFalse(r, "Should throw cause price can't be set to 0");
     }
 
     function testUpdateAmount() public {
         uint32 newAmount = 7000;
         Assert.notEqual(uint(escrow.amount()), uint(newAmount), "Choose another new amount");
+
+        ThrowProxy proxy = new ThrowProxy(address(escrow));
+        address payable proxyPay = address(uint160(address(proxy)));
+        Escrow(proxyPay).updateAmount(newAmount);
+        bool r = proxy.execute.gas(100000)();
+        Assert.isFalse(r, "Should throw cause account is not owner");
+
         escrow.updateAmount(newAmount);
         Assert.equal(uint(escrow.amount()), uint(newAmount), "Invalid amount update");
     }

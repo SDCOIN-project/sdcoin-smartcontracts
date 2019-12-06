@@ -2,7 +2,7 @@
 
 ## Inheritance
 
-+ Ownable
++ OpenZeppelin's WhitelistedRole
 
 ## Public methods
 
@@ -11,7 +11,7 @@
 |constructor|uint256 _sdcExchangeRate, address _sdcAddress, address _luvAddress|-//-|Creates swap contract, sets default SDC exchange rate and stores SDC and LUV contracts addresses|
 |swap|address receiver|uint256|Swaps SDC to LUV with current SDC exchange rate|
 |countSDCFromLUV|uint256 luvAmount|uint256|Counts amount of SDC needed to get given amount of LUV|
-|updateRate|uint256 _exchangeRate|-//-|Update SDC exchange rate. Can be called only by admin or owner|
+|updateRate|uint256 _exchangeRate|-//-|Update SDC exchange rate. Can be called only by whitelisted account|
 
 ## Getters
 

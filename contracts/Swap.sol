@@ -1,11 +1,12 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.0;
+
+import "@openzeppelin/contracts/access/roles/WhitelistedRole.sol";
 
 import "./LUV.sol";
 import "./SDC.sol";
-import "./Ownable.sol";
 
 /// @title Swap contract for swapping SDC (utility token) to LUV (stable coin)
-contract Swap is Ownable {
+contract Swap is WhitelistedRole {
     /// @notice address of SDC contract
     SDC public sdc;
     /// @notice address of LUV contract
@@ -27,6 +28,8 @@ contract Swap is Ownable {
 
         sdc = SDC(_sdcAddress);
         luv = LUV(_luvAddress);
+
+        addWhitelisted(msg.sender);
     }
 
     /**
@@ -53,8 +56,8 @@ contract Swap is Ownable {
     }
 
     /// @notice Counts amount of SDC needed to get given amount of LUV
-    function countSDCFromLUV(uint256 luvAmount) external view returns(uint256) {
-        uint256 krwAmount = luvAmount * luvExchangeRate;
+    function countSDCFromLUV(uint256 _luvAmount) external view returns(uint256) {
+        uint256 krwAmount = _luvAmount * luvExchangeRate;
         uint256 sdcAmount = krwAmount / sdcExchangeRate;
         if (krwAmount % sdcExchangeRate != 0) sdcAmount++;
         return sdcAmount;
@@ -62,7 +65,7 @@ contract Swap is Ownable {
 
     /// @notice Update SDC-to-fiat exchange rate
     /// Can be called only by admin or owner
-    function updateSDCRate(uint256 _sdcExchangeRate) external onlyOwnerOrAdmin {
+    function updateSDCRate(uint256 _sdcExchangeRate) external onlyWhitelisted {
         sdcExchangeRate = _sdcExchangeRate;
     }
 }
