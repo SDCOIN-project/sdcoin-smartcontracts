@@ -31,18 +31,17 @@ contract('Escrow', (accounts) => {
     }
 
     it('payable constructor test', async function() {
-        let id = 1, price = 100, amount = 15
+        let id = 1, price = 100
         let ethVal = web3.utils.toWei('1', 'ether')
-        let escrow = await Escrow.new(accounts[0], id, price, amount,
-                                      sdc.address, luv.address, swap.address, {from: accounts[0], value: ethVal})
+        let escrow = await Escrow.new(accounts[0], id, price, swap.address,
+                                      {from: accounts[0], value: ethVal})
         let escrowBalance = await web3.eth.getBalance(escrow.address).then(parseInt)
         assert.equal(parseInt(ethVal), escrowBalance, "Escrow ETH balance incorrect")
     })
 
     it('several payments + withdraw LUV test', async function() {
-        let id = 1, price = 100, amount = 15
-        let escrow = await Escrow.new(accounts[0], id, price, amount,
-                                      sdc.address, luv.address, swap.address)
+        let id = 1, price = 100
+        let escrow = await Escrow.new(accounts[0], id, price, swap.address)
 
         let buyerAddr = accounts[1]
         await web3.eth.personal.unlockAccount(buyerAddr)
@@ -60,20 +59,13 @@ contract('Escrow', (accounts) => {
         let buyAmount = 3
         for (let i = 0; i < 5; i++) {
             let ethBalance = await web3.eth.getBalance(fromAddr).then(parseInt)
-            let curAmount = await escrow.amount.call()
 
             await payment(escrow, buyerAddr, fromAddr, buyAmount)
 
             let newEthBalance = await web3.eth.getBalance(fromAddr).then(parseInt)
             let diff = (newEthBalance - ethBalance)/Escrow.defaults().gasPrice
             assert.isAbove(diff, 0, "Should be greater than 0, cause we compensate spent ETH")
-
-            let newAmount = await escrow.amount.call()
-            assert.equal(newAmount, curAmount - buyAmount, "Amount should decrease")
         }
-
-        let leftAmount = await escrow.amount.call().then(parseInt)
-        assert.equal(leftAmount, 0, "Should be no items on contract")
 
         let luvEscrowBalance = await luv.balanceOf.call(escrow.address).then(parseInt)
         assert.isAbove(luvEscrowBalance, 0, "Escrow should receive LUV for payments")
@@ -99,9 +91,8 @@ contract('Escrow', (accounts) => {
     })
 
     it('withdrawEth test', async function() {
-        let id = 1, price = 100, amount = 15
-        let escrow = await Escrow.new(accounts[0], id, price, amount,
-                                      sdc.address, luv.address, swap.address)
+        let id = 1, price = 100
+        let escrow = await Escrow.new(accounts[0], id, price, swap.address)
         
         let ethVal = web3.utils.toWei('1', 'ether')
         await web3.eth.sendTransaction({from: accounts[0], to: escrow.address, value: ethVal})

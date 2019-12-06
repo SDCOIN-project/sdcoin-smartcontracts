@@ -17,8 +17,6 @@ contract Escrow is Ownable {
     uint32 public id;
     /// @notice product price
     uint256 public price;
-    /// @notice product amount
-    uint32 public amount;
 
     /** @notice Emits on payment
         @param _sender - account, which buys product
@@ -55,21 +53,16 @@ contract Escrow is Ownable {
         @param _owner - owner of escrow (retailer)
         @param _id - id of product
         @param _price - price of product
-        @param _amount - amount of product available for purchasing
-        @param _sdcAddress - address of SDC contract
-        @param _luvAddress - address of LUV contract
         @param _swapAddress - address of Swap contract
      */
-    constructor(address _owner, uint32 _id, uint256 _price, uint32 _amount,
-                address _sdcAddress, address _luvAddress, address _swapAddress)
-                public payable priceNotZero(_price) {
-        _sdc = SDC(_sdcAddress);
-        _luv = LUV(_luvAddress);
+    constructor(address _owner, uint32 _id, uint256 _price, address _swapAddress)
+    public payable priceNotZero(_price) {
         _swap = Swap(_swapAddress);
+        _sdc = SDC(_swap.sdc());
+        _luv = LUV(_swap.luv());
 
         id = _id;
         price = _price;
-        amount = _amount;
 
         transferOwnership(_owner);
     }
@@ -79,12 +72,6 @@ contract Escrow is Ownable {
     function updatePrice(uint256 _newPriceLUV) external
     onlyOwner priceNotZero(_newPriceLUV) {
         price = _newPriceLUV;
-    }
-
-    /// @notice Updates available amount of product
-    /// Can be called only by contract owner
-    function updateAmount(uint32 _newAmount) external onlyOwner {
-        _updateAmount(_newAmount);
     }
 
     /// @notice Counts amount of SDC which is necessary to buy given amount of product
@@ -112,7 +99,6 @@ contract Escrow is Ownable {
      */
     function payment(uint32 _buyAmount, address _from, bytes calldata _sig)
     external {
-        require(amount >= _buyAmount, "Not enough items");
         require(address(this).balance >= paymentGas * tx.gasprice,
                 "Insufficient ether to return gas");
 
@@ -125,8 +111,6 @@ contract Escrow is Ownable {
         _sdc.transferFrom(_from, address(this), neededSDC);
         _sdc.approve(address(_swap), neededSDC);
         uint256 luvAmount = _swap.swap(address(this));
-
-        _updateAmount(amount - _buyAmount);
 
         emit Payment(_from, id, price, _buyAmount, neededSDC, luvAmount);
         address(msg.sender).transfer(paymentGas * tx.gasprice);
@@ -147,10 +131,5 @@ contract Escrow is Ownable {
     /// Can be called only by contract owner
     function withdrawEth() external onlyOwner {
         msg.sender.transfer(address(this).balance);
-    }
-
-    /// @notice Updates available amount
-    function _updateAmount(uint32 _newAmount) private {
-        amount = _newAmount;
     }
 }

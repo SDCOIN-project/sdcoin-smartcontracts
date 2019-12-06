@@ -8,6 +8,7 @@ import "../contracts/SDC.sol";
 import "../contracts/LUV.sol";
 import "../contracts/Escrow.sol";
 import "../contracts/testing/TestHelper.sol";
+
 import "./ThrowProxy.sol";
 
 contract TestEscrow {
@@ -22,21 +23,17 @@ contract TestEscrow {
     address eOwner = address(this);
     uint32 eId = 1234;
     uint256 ePrice = 54321;
-    uint32 eAmount = 10000;
 
     function beforeAll() public {
-        escrow = new Escrow(eOwner, eId, ePrice, eAmount,
-                            address(sdc), address(luv), address(swap));
+        escrow = new Escrow(eOwner, eId, ePrice, address(swap));
     }
 
     function testEscrowParamsAfterCreation() public {
-        Escrow e = new Escrow(eOwner, eId, ePrice, eAmount,
-                            address(sdc), address(luv), address(swap));
+        Escrow e = new Escrow(eOwner, eId, ePrice, address(swap));
 
         Assert.equal(e.owner(), eOwner, "Invalid owner for escrow");
         Assert.equal(uint(e.id()), uint(eId), "Invalid id for escrow");
         Assert.equal(e.price(), ePrice, "Invalid price for escrow");
-        Assert.equal(uint(e.amount()), uint(eAmount), "Invalid amount for escrow");
     }
 
     function testUpdatePrice() public {
@@ -54,8 +51,7 @@ contract TestEscrow {
     }
 
     function testUpdateZeroPrice() public {
-        Escrow escrowPrice = new Escrow(eOwner, eId, ePrice, eAmount,
-                            address(sdc), address(luv), address(swap));
+        Escrow escrowPrice = new Escrow(eOwner, eId, ePrice, address(swap));
         ThrowProxy proxy = new ThrowProxy(address(escrowPrice));
         escrowPrice.transferOwnership(address(proxy));
 
@@ -63,20 +59,6 @@ contract TestEscrow {
         Escrow(proxyPay).updatePrice(0);
         bool r = proxy.execute.gas(100000)();
         Assert.isFalse(r, "Should throw cause price can't be set to 0");
-    }
-
-    function testUpdateAmount() public {
-        uint32 newAmount = 7000;
-        Assert.notEqual(uint(escrow.amount()), uint(newAmount), "Choose another new amount");
-
-        ThrowProxy proxy = new ThrowProxy(address(escrow));
-        address payable proxyPay = address(uint160(address(proxy)));
-        Escrow(proxyPay).updateAmount(newAmount);
-        bool r = proxy.execute.gas(100000)();
-        Assert.isFalse(r, "Should throw cause account is not owner");
-
-        escrow.updateAmount(newAmount);
-        Assert.equal(uint(escrow.amount()), uint(newAmount), "Invalid amount update");
     }
 
     function testTransferEth() public {

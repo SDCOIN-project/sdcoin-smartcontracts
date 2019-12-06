@@ -2,7 +2,7 @@ var SDC = artifacts.require("SDC");
 var LUV = artifacts.require("LUV");
 var Swap = artifacts.require("Swap");
 
-var Escrow = artifacts.require("Escrow");
+var EscrowFactory = artifacts.require("EscrowFactory");
 
 var TestHelper = artifacts.require("TestHelper");
 
@@ -44,8 +44,7 @@ module.exports = async function(deployer, network, accounts) {
     sdc.addWhitelisted(Swap.address, {from: addr0})
     luv.addWhitelisted(Swap.address, {from: addr0})
 
-    // Escrow
-    let id = 0, price = 1, amount = 1000
-    await deployer.deploy(Escrow, addr0, id, price, amount, SDC.address, LUV.address, Swap.address)
+    // EscrowFactory
+    await deployer.deploy(EscrowFactory, Swap.address, {from: addr0})
   }
 };
