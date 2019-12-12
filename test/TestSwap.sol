@@ -95,4 +95,30 @@ contract TestSwap {
 
         Assert.equal(swapRate.sdcExchangeRate(), newRate, "Incorrect rate");
     }
+
+    function testSwapRates() public {
+        uint256 rate = 10000;
+
+        uint oldRate = swap.sdcExchangeRate();
+        tester.swapUpdateRate(rate);
+        Swap swapTest = swap;
+
+        uint256 sdcTokens = 10 * uint256(1e18);
+
+        tester.transferSDC(address(this), sdcTokens + 1234);
+
+        Assert.equal(luv.balanceOf(address(this)), 0, "Should be 0 LUV tokens");
+        uint256 oldSDCBalance = sdc.balanceOf(address(this));
+
+        sdc.approve(address(swapTest), sdcTokens);
+        uint256 luvTokens = swapTest.swap(address(this));
+
+        uint256 expectedLUV = 100 * uint256(1e18);
+
+        Assert.equal(luvTokens, expectedLUV, "Returned LUV tokens value incorrect");
+        Assert.equal(sdc.balanceOf(address(this)), oldSDCBalance - sdcTokens, "SDC balance should decrease");
+        Assert.equal(luv.balanceOf(address(this)), expectedLUV, "Should be 100 LUV tokens");
+
+        tester.swapUpdateRate(oldRate);
+    }
 }

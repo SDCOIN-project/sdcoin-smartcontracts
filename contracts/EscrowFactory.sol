@@ -31,8 +31,8 @@ contract EscrowFactory {
         @param _price - escrow product price in LUV
         @return address of new contract and its index
      */
-    function create(uint32 _id, uint256 _price) external {
-        Escrow escrow = new Escrow(msg.sender, _id, _price, swap);
+    function create(uint32 _id, uint256 _price) external payable {
+        Escrow escrow = (new Escrow).value(msg.value)(msg.sender, _id, _price, swap);
         escrowList[msg.sender].push(address(escrow));
         emit Created(msg.sender, address(escrow), escrowList[msg.sender].length-1);
     }

@@ -5,6 +5,8 @@ var Escrow = artifacts.require('Escrow')
 
 var TestHelper = artifacts.require('TestHelper')
 
+const BigNumber = require('bignumber.js')
+
 contract('Escrow', (accounts) => {
     let sdc, luv, swap
 
@@ -108,5 +110,26 @@ contract('Escrow', (accounts) => {
 
         await escrow.withdrawEth.sendTransaction({from: accounts[0]})
         assert.equal(await web3.eth.getBalance(escrow.address).then(parseInt), 0, "Incorrect ETH balance for escrow. Should be 0 after withdraw")
+    })
+
+    it('escrow transfer test', async function() {
+        let id = 0, priceLUV = String(100e18), priceSDC = 10e18
+        let ethVal = web3.utils.toWei('1', 'ether')
+        let escrow = await Escrow.new(accounts[0], id, priceLUV, swap.address,
+                                      {from: accounts[0], value: ethVal})
+        
+        let sdcRate = await swap.sdcExchangeRate().then(parseInt)
+        let luvRate = await swap.luvExchangeRate().then(parseInt)
+        let expectedLUV = BigNumber(priceSDC).multipliedBy(sdcRate).dividedBy(luvRate)
+
+        let tester = await TestHelper.deployed()
+        await tester.transferSDC(accounts[3], String(priceSDC))
+        assert.equal(await sdc.balanceOf.call(accounts[3]).then(parseInt), priceSDC, "More SDC then needed for test")
+
+        await payment(escrow, accounts[3], accounts[4])
+        
+        assert.equal(await sdc.balanceOf.call(accounts[3]).then(parseInt), 0, "All SDC should be spents")
+        assert.equal(await luv.balanceOf.call(escrow.address).then(parseInt), expectedLUV,
+                     "Incorrect LUV balance on escrow")
     })
 })

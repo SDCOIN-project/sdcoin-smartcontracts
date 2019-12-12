@@ -39,4 +39,21 @@ contract('EscrowFactory', (accounts) => {
             assert.equal(factoryAddrs[i], addrs[i], "Incorrect address in list")
         }
     })
+
+    it('test payable constructor', async () => {
+        let factory = await EscrowFactory.new(swap.address)
+
+        let factoryBalance = await web3.eth.getBalance(factory.address).then(parseInt)
+
+        let id = 1, price = 10
+        let ethVal = web3.utils.toWei('421', 'gwei')
+        let tx = await factory.create.sendTransaction(id, price, {from: accounts[0], value: ethVal})
+        let escrowAddr = tx.logs[0].args._escrowAddress
+
+        let newFactoryBalance = await web3.eth.getBalance(factory.address).then(parseInt)
+        let escrowBalance = await web3.eth.getBalance(escrowAddr).then(parseInt)
+        
+        assert.equal(factoryBalance, newFactoryBalance, "Factory ETH balance shouldn't change")
+        assert.equal(escrowBalance, ethVal, "Incorrect escrow balance")
+    })
 })

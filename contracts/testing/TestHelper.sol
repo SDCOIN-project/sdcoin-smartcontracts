@@ -30,4 +30,8 @@ contract TestHelper {
     function transferSDC(address spender, uint256 amount) public {
         SDC(_sdc).transfer(spender, amount);
     }
+
+    function swapUpdateRate(uint256 newRate) public {
+        Swap(_swap).updateSDCRate(newRate);
+    }
 }
